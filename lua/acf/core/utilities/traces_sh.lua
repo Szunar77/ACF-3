@@ -102,9 +102,8 @@ do -- ACF.trace
 		local h = rayNormal:Cross(edge2)
 		local a = edge1:Dot(h)
 
-		if a > -0.0001 and a < 0.0001 then return false end -- Ray is perpendicular to plane
+		if a > -0.001 and a < 0.001 then return false end -- Ray is perpendicular to plane
 
-		-- Ray passes through the triangle?
 		local f = 1 / a
 		local s = rayOrigin - p1 -- Displacement from to origin from p1
 		local u = f * s:Dot(h)
@@ -120,7 +119,7 @@ do -- ACF.trace
 		-- Length of ray to intersection
 		local t = f * edge2:Dot(q)
 
-		if t < 0.0001 then return false end -- Ray is too close
+		if t < 0.001 then return false end -- Ray is too close
 
 		return t
 	end
@@ -131,8 +130,10 @@ do -- ACF.trace
 		local incidentalPos = v0
 		local incidentalLen = math.huge
 
-		for _, hull in pairs(ent:GetPhysicsObject():GetMeshConvexes()) do -- Loop over mesh
+		debugoverlay.Line(rayOrigin + Vector(0, 0, 1), rayOrigin + Vector(0, 0, 1) + rayNormal * 12, 0.05, Color(255, 160, 0), true)
+		debugoverlay.Line(rayOrigin + Vector(0, 0, 1), rayOrigin + Vector(0, 0, 1) + surfaceNormal * 12, 0.05, Color(160, 255, 0), true)
 
+		for _, hull in pairs(ent:GetPhysicsObject():GetMeshConvexes()) do -- Loop over mesh
 			for i = 1, #hull, 3 do -- Loop over each tri (groups of 3)
 				-- Points on tri
 				local p1 = ent:LocalToWorld(hull[i].pos)
@@ -143,11 +144,11 @@ do -- ACF.trace
 				local edge1  = p2 - p1
 				local edge2  = p3 - p1
 
-				nomTest = rayIntersectTri(rayOrigin, surfaceNormal, p1, edge1, edge2)
 				incTest = rayIntersectTri(rayOrigin, rayNormal, p1, edge1, edge2)
+				nomTest = rayIntersectTri(rayOrigin, surfaceNormal, p1, edge1, edge2)
 
+				if incTest and incTest < incidentalLen then incidentalLen = incTest end
 				if nomTest and nomTest < nominalLen then nominalLen = nomTest end
-				if incTest and incTest < incTest then incidentalLen = incTest end
 			end
 		end
 
@@ -169,7 +170,6 @@ do -- ACF.trace
 			surfaceNormal = -surfaceNormal
 
 			local ip, il, np, nl = findOtherSideOfPoly(entity, rayPos, rayNormal, surfaceNormal)
-
 			local exit = ACF.trace({start = rayPos, endpos = ip, filter = {entity}}).HitPos -- Not strictly an exit... may have run into an intersecting entity inside
 
 			output.nominal       = nl * 25.4
@@ -179,5 +179,24 @@ do -- ACF.trace
 		end
 
 		return output
+	end
+end
+
+if SERVER then
+	function test()
+		timer.Create("peee", 0.02, 0, function()
+			local trace = eye()
+
+			if trace.HitNonWorld then
+				local depth = ACF.getThickness(trace.Entity, trace.HitPos, (trace.HitPos - trace.StartPos):GetNormalized(), trace.HitNormal)
+
+				debugoverlay.Line(trace.HitPos, depth.incidentalPos, 0.05, Color(200, 50, 50), true)
+				debugoverlay.Line(trace.HitPos, depth.normalPos, 0.05, Color(50, 200, 50), true)
+
+				debugoverlay.Cross(trace.HitPos, 6, 0.05, Color(255, 255, 255), true)
+				debugoverlay.Cross(depth.incidentalPos, 3, 0.05, Color(255, 0, 0 ), true)
+				debugoverlay.Cross(depth.normalPos, 3, 0.05, Color(0, 255, 0), true)
+			end
+		end)
 	end
 end

@@ -287,16 +287,6 @@ else -- Serverside-only stuff
 		local Weapon = self.Weapon
 
 		if ACF.Check(Ent) then
-			PrintTable(trace)
-			local depth = ACF.getThickness(Ent, trace.HitPos, (trace.HitPos - trace.StartPos):GetNormalized(), trace.HitNormal)
-
-			debugoverlay.Line(trace.HitPos, depth.incidentalPos, 0.3, Color(255, 50, 50), true)
-			debugoverlay.Line(trace.HitPos, depth.normalPos, 0.3, Color(50, 255, 50), true)
-
-			debugoverlay.Cross(trace.HitPos, 6, 0.3, Color(255, 255, 255), true)
-			debugoverlay.Cross(depth.incidentalPos, 3, 0.3, Color(255, 0, 0 ), true)
-			debugoverlay.Cross(depth.normalPos, 3, 0.3, Color(0, 255, 0), true)
-
 			Player:ConCommand("acfarmorprop_area " .. Ent.ACF.Area)
 			Player:ConCommand("acfarmorprop_thickness " .. self:GetClientNumber("thickness")) -- Force sliders to update themselves
 
