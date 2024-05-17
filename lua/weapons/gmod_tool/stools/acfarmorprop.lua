@@ -163,84 +163,49 @@ if CLIENT then
 	})
 
 	function TOOL:DrawToolScreen()
+		--[[
 		local Trace = self:GetOwner():GetEyeTrace()
 		local Ent   = Trace.Entity
 		local Weapon = self.Weapon
 		local Health = math.Round(Weapon:GetNWFloat("HP", 0))
 		local MaxHealth = math.Round(Weapon:GetNWFloat("MaxHP", 0))
 
+		-- TODO: Get this to work on ALL entities
+		local depth     = ACF.getThickness(Ent, Trace.HitPos, Trace.Normal, Trace.HitNormal)
+		local nominal   = depth.nominal
+		local effective = depth.incidental
 
-		if Ent.GetArmor then -- Is procedural armor
-			local Material = Ent.ArmorType
-			local Mass     = math.Round(Weapon:GetNWFloat("WeightMass", 0), 1)
-			local Angle    = math.Round(ACF.GetHitAngle(Trace, (Trace.HitPos - Trace.StartPos):GetNormalized()), 1)
-			local Armor    = math.Round(Ent:GetArmor(Trace))
-			local Size     = Ent:GetSize()
-			local Nominal  = math.Round(math.min(Size[1], Size[2], Size[3]) * 25.4, 1)
-			local MaxArmor = Ent:GetSize():Length() * 25.4
-
-			cam.Start2D()
-				render.Clear(0, 0, 0, 0)
-				surface.SetDrawColor(Black)
-				surface.DrawRect(0, 0, 256, 256)
-				surface.SetDrawColor(BGGray)
-				surface.DrawRect(0, 34, 256, 2)
-
-				drawText("ACF Armor Data", "ACF_ToolTitle", 128, 20, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
-				drawText("Material: " .. Material, "ACF_ToolSub", 128, 48, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
-				drawText("Weight: " .. Mass .. "kg", "ACF_ToolSub", 128, 70, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
-				drawText("Nominal Armor: " .. Nominal .. "mm", "ACF_ToolSub", 128, 92, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
-
-				draw.RoundedBox(6, 10, 110, 236, 32, BGGray)
-				draw.RoundedBox(6, 10, 110, Angle / 90 * 236, 32, Green)
-				drawText("Hit Angle: " .. Angle .. "°", "ACF_ToolLabel", 15, 110, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, BGGray)
-
-				draw.RoundedBox(6, 10, 160, 236, 32, BGGray)
-				draw.RoundedBox(6, 10, 160, Armor / MaxArmor * 236, 32, Blue)
-				drawText("Armor: " .. Armor .. "mm", "ACF_ToolLabel", 15, 160, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, BGGray)
-
-				draw.RoundedBox(6, 10, 210, 236, 32, BGGray)
-				draw.RoundedBox(6, 10, 210, Health / MaxHealth * 236, 32, Red)
-				drawText("Health: " .. Health, "ACF_ToolLabel", 15, 210, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, Black)
-				--drawText("")
-			cam.End2D()
-		else
-			local Armour = math.Round(Weapon:GetNWFloat("Armour", 0), 2)
-			local MaxArmour = math.Round(Weapon:GetNWFloat("MaxArmour", 0), 2)
-			local HealthTxt = Health .. "/" .. MaxHealth
-			local ArmourTxt = Armour .. "/" .. MaxArmour
-
-			cam.Start2D()
-				render.Clear(0, 0, 0, 0)
-
-				surface.SetDrawColor(Black)
-				surface.DrawRect(0, 0, 256, 256)
-				surface.SetFont("Torchfont")
-
-				-- header
-				draw.SimpleTextOutlined("ACF Stats", "Torchfont", 128, 30, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, color_black)
-
-				-- armor bar
-				draw.RoundedBox(6, 10, 83, 236, 64, BGGray)
-				if Armour ~= 0 and MaxArmour ~= 0 then
-					draw.RoundedBox(6, 15, 88, Armour / MaxArmour * 226, 54, Blue)
-				end
-
-				draw.SimpleTextOutlined("Armor", "Torchfont", 128, 100, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, color_black)
-				draw.SimpleTextOutlined(ArmourTxt, "Torchfont", 128, 130, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, color_black)
-
-				-- health bar
-				draw.RoundedBox(6, 10, 183, 236, 64, BGGray)
-				if Health ~= 0 and MaxHealth ~= 0 then
-					draw.RoundedBox(6, 15, 188, Health / MaxHealth * 226, 54, Red)
-				end
-
-				draw.SimpleTextOutlined("Health", "Torchfont", 128, 200, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, color_black)
-				draw.SimpleTextOutlined(HealthTxt, "Torchfont", 128, 230, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 4, color_black)
-			cam.End2D()
-		end
+		local Mass     = math.Round(Weapon:GetNWFloat("WeightMass", 0), 1)
+		local Angle    = math.Round(ACF.GetHitAngle(Trace, (Trace.HitPos - Trace.StartPos):GetNormalized()), 1)
+		local Armor    = math.Round(effective)
 
 
+		cam.Start2D()
+			render.Clear(0, 0, 0, 0)
+			surface.SetDrawColor(Black)
+			surface.DrawRect(0, 0, 256, 256)
+			surface.SetDrawColor(BGGray)
+			surface.DrawRect(0, 34, 256, 2)
+
+			drawText("ACF Armor Data", "ACF_ToolTitle", 128, 20, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
+			--drawText("Material: " .. Material, "ACF_ToolSub", 128, 48, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
+			drawText("Weight: " .. Mass .. "kg", "ACF_ToolSub", 128, 70, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
+			drawText("Nominal Armor: " .. nominal .. "mm", "ACF_ToolSub", 128, 92, TextGray, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 0, BGGray)
+
+			draw.RoundedBox(6, 10, 110, 236, 32, BGGray)
+			draw.RoundedBox(6, 10, 110, Angle / 90 * 236, 32, Green)
+			drawText("Hit Angle: " .. Angle .. "°", "ACF_ToolLabel", 15, 110, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, BGGray)
+
+			draw.RoundedBox(6, 10, 160, 236, 32, BGGray)
+			draw.RoundedBox(6, 10, 160, 1 * 236, 32, Blue)
+			drawText("Armor: " .. Armor .. "mm", "ACF_ToolLabel", 15, 160, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, BGGray)
+
+			draw.RoundedBox(6, 10, 210, 236, 32, BGGray)
+			draw.RoundedBox(6, 10, 210, 1 * 236, 32, Red)
+			drawText("Health: " .. Health, "ACF_ToolLabel", 15, 210, Black, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 0, Black)
+			--drawText("")
+		cam.End2D()
+		]]--
 	end
 
 	-- Clamp thickness if the change in ductility puts mass out of range
@@ -314,13 +279,24 @@ if CLIENT then
 else -- Serverside-only stuff
 	function TOOL:Think()
 		local Player = self:GetOwner()
-		local Ent = Player:GetEyeTrace().Entity
+		local trace  = Player:GetEyeTrace()
+		local Ent    = trace.Entity
 
 		if Ent == self.AimEntity then return end
 
 		local Weapon = self.Weapon
 
 		if ACF.Check(Ent) then
+			PrintTable(trace)
+			local depth = ACF.getThickness(Ent, trace.HitPos, (trace.HitPos - trace.StartPos):GetNormalized(), trace.HitNormal)
+
+			debugoverlay.Line(trace.HitPos, depth.incidentalPos, 0.3, Color(255, 50, 50), true)
+			debugoverlay.Line(trace.HitPos, depth.normalPos, 0.3, Color(50, 255, 50), true)
+
+			debugoverlay.Cross(trace.HitPos, 6, 0.3, Color(255, 255, 255), true)
+			debugoverlay.Cross(depth.incidentalPos, 3, 0.3, Color(255, 0, 0 ), true)
+			debugoverlay.Cross(depth.normalPos, 3, 0.3, Color(0, 255, 0), true)
+
 			Player:ConCommand("acfarmorprop_area " .. Ent.ACF.Area)
 			Player:ConCommand("acfarmorprop_thickness " .. self:GetClientNumber("thickness")) -- Force sliders to update themselves
 

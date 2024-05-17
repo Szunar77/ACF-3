@@ -34,6 +34,7 @@ do -- ACF.trace
 	-- Does NOT modify the original filter
 	local util = util
 	local sqrt = math.sqrt
+	local v0   = Vector()
 
 	local function doRecursiveTrace(traceData)
 		local Output = traceData.output
@@ -81,83 +82,102 @@ do -- ACF.trace
 		return Output
 	end
 
-	local function findOtherSideOfSphere(point, dir, ent)
+	local function findOtherSideOfSphere(ent, rayOrigin, rayDir)
 		local radius = ent:Radius()
 		local center = ent:GetPos()
 
-		local displacement = point - origin
+		local displacement = rayOrigin - center
 
 		local ie     = ray:Dot(displacement)^2 - displacement:LengthSqr()
-		local exit   = ray:Dot(point - center) + sqrt(ie)
+		local exit   = ray:Dot(displacement) + sqrt(ie)
 		local length = (point - exit):Length() * 25.4
 
-		return exit, length
+		return exit, length, point + dir * radius * 2, radius * 2
 	end
 
-	local function findOtherSideOfPoly(Ent, Origin, Dir)
-		local Mesh = Ent:GetPhysicsObject():GetMeshConvexes()
-		local Min  = math.huge
+	local function rayIntersectTri(rayOrigin, rayNormal, p1, edge1, edge2)
 
-		for K in pairs(Mesh) do -- Loop over mesh
-			local Hull = Mesh[K]
+		if rayNormal:Dot(edge1:Cross(edge2)) > 0 then return false end -- Plane facing the wrong way
 
-			for I = 1, #Hull, 3 do -- Loop over each tri (groups of 3)
+		local h = rayNormal:Cross(edge2)
+		local a = edge1:Dot(h)
+
+		if a > -0.0001 and a < 0.0001 then return false end -- Ray is perpendicular to plane
+
+		-- Ray passes through the triangle?
+		local f = 1 / a
+		local s = rayOrigin - p1 -- Displacement from to origin from p1
+		local u = f * s:Dot(h)
+
+		if u < 0 or u > 1 then return false end
+
+		local q = s:Cross(edge1)
+		local v = f * rayNormal:Dot(q)
+
+		if v < 0 or u + v > 1 then return false end
+
+		-- Ray intersects triangle
+		-- Length of ray to intersection
+		local t = f * edge2:Dot(q)
+
+		if t < 0.0001 then return false end -- Ray is too close
+
+		return t
+	end
+
+	local function findOtherSideOfPoly(ent, rayOrigin, rayNormal, surfaceNormal)
+		local nominalPos    = v0
+		local nominalLen    = math.huge
+		local incidentalPos = v0
+		local incidentalLen = math.huge
+
+		for _, hull in pairs(ent:GetPhysicsObject():GetMeshConvexes()) do -- Loop over mesh
+
+			for i = 1, #hull, 3 do -- Loop over each tri (groups of 3)
 				-- Points on tri
-				local P1     = Ent:LocalToWorld(Hull[I].pos)
-				local P2     = Ent:LocalToWorld(Hull[I + 1].pos)
-				local P3     = Ent:LocalToWorld(Hull[I + 2].pos)
+				local p1 = ent:LocalToWorld(hull[i].pos)
+				local p2 = ent:LocalToWorld(hull[i + 1].pos)
+				local p3 = ent:LocalToWorld(hull[i + 2].pos)
 
 				-- Two edges to test with
-				local Edge1  = P2 - P1
-				local Edge2  = P3 - P1
+				local edge1  = p2 - p1
+				local edge2  = p3 - p1
 
-				-- Plane facing the wrong way?
-				if Dir:Dot(Edge1:Cross(Edge2)) > 0 then  continue end
+				nomTest = rayIntersectTri(rayOrigin, surfaceNormal, p1, edge1, edge2)
+				incTest = rayIntersectTri(rayOrigin, rayNormal, p1, edge1, edge2)
 
-				-- Ray is perpendicular to plane?
-				local H = Dir:Cross(Edge2)
-				local A = Edge1:Dot(H)
-
-				if A > -0.0001 and A < 0.0001 then continue end
-
-				-- Ray passes through the triangle?
-				local F = 1 / A
-				local S = Origin - P1 -- Displacement from to origin from P1
-				local U = F * S:Dot(H)
-
-				if U < 0 or U > 1 then continue end
-
-				local Q = S:Cross(Edge1)
-				local V = F * Dir:Dot(Q)
-
-				if V < 0 or U + V > 1 then continue end
-
-				-- Ray intersects triangle
-				-- Length of ray to intersection
-				local T = F * Edge2:Dot(Q)
-
-				if T > 0.0001 and T < Min then Min = T end
+				if nomTest and nomTest < nominalLen then nominalLen = nomTest end
+				if incTest and incTest < incTest then incidentalLen = incTest end
 			end
 		end
 
-		return Origin + Dir * Min
+		return rayOrigin + rayNormal * incidentalLen, incidentalLen, rayOrigin + surfaceNormal * nominalLen, nominalLen
 	end
 
-	function ACF.getTraceDepth(trace)
+	local output = {nominal = 0, incidental = 0, normalPos = false, incidentalPos = false}
+
+	function ACF.getThickness(entity, rayPos, rayNormal, surfaceNormal)
 		-- Traces from the surface of an object to the furthest tri on the opposite side
 		-- Stops at any other object that is intersecting inside
 
-		local ent    = trace.Entity
-		local origin = trace.StartPos
-		local enter  = trace.HitPos
-		local rayDir = (enter - trace.StartPos):GetNormalized()
+		if not IsValid(entity) or entity:IsWorld() then
+			output.nominal       = 0
+			output.incidental    = 0
+			output.normalPos     = pos
+			output.incidentalPos = pos
+		else
+			surfaceNormal = -surfaceNormal
 
-		local tempFilter = {}; for k, v in pairs(trace.Filter) do filter[k] = v end -- Shallow copy of the original filter (presumably a projectile trace) prevents two overlapping cubes from infinitely intersecting
+			local ip, il, np, nl = findOtherSideOfPoly(entity, rayPos, rayNormal, surfaceNormal)
 
-		local opposite = ent._IsSpherical and findOtherSideOfSphere(enter, rayDir, ent:GetPos()) or findOtherSideOfPoly(ent, origin, rayDir)
-		local exit     = ACF.trace({start = enter, endpos = opposite, filter = tempFilter}).HitPos -- Not strictly an exit... may have run into an intersecting entity
-		local length   = (exit - enter):Length() * 25.4 -- Inches to mm
+			local exit = ACF.trace({start = rayPos, endpos = ip, filter = {entity}}).HitPos -- Not strictly an exit... may have run into an intersecting entity inside
 
-		return exit, length
+			output.nominal       = nl * 25.4
+			output.incidental    = (exit - rayPos):Length() * 25.4
+			output.normalPos     = np
+			output.incidentalPos = ip
+		end
+
+		return output
 	end
 end
