@@ -100,7 +100,7 @@ net.Receive("ACF_RequestVehicleInfo", function()
     local Pod = net.ReadEntity()
     local SequenceID = net.ReadInt(10)
     local Offset = net.ReadVector()
-    local ZoomBehavior = net.ReadUInt(3)
+    local ZoomBehavior = net.ReadUInt(2)
 
     local Vehicle = Pod:GetParent()
 

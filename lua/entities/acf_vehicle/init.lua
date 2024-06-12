@@ -128,7 +128,7 @@ do -- Spawning and Updating
 				net.WriteEntity(Pod)
 				net.WriteInt(Vehicle.HandleAnimation(_, Entity:CPPIGetOwner()), 10)
 				net.WriteVector(Entity.CamOffset)
-				net.WriteInt(Entity.CamZoom, 3)
+				net.WriteUInt(Entity.CamZoom, 2)
 			net.Broadcast()
 
 			Pod:SetNoDraw(true)
