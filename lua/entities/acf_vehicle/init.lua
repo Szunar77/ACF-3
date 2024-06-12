@@ -61,6 +61,16 @@ do -- Spawning and Updating
 			Data.Vehicle = Data.Component or Data.Id
 		end
 
+		do -- Clamp camera behavior
+			local X = ACF.CheckNumber(Data.CamOffsetX, 0)
+			local Y = ACF.CheckNumber(Data.CamOffsetY, -25)
+			local Z = ACF.CheckNumber(Data.CamOffsetZ, 50)
+
+			Data.CamOffset = Vector(X, Y, Z)
+
+			Data.CamZoom = ACF.CheckNumber(Data.CamZoom, 2)
+		end
+
 		local Class = Classes.GetGroup(Vehicles, Data.Vehicle)
 
 		if not Class then
@@ -106,6 +116,8 @@ do -- Spawning and Updating
 		Entity.ClassData = Class
 		Entity.Class     = Class.ID
 		Entity.EntType   = Class.Name
+		Entity.CamOffset = Data.CamOffset
+		Entity.CamZoom   = Data.CamZoom
 
 		-- Set the pod animation and update it briefly on the client
 		Pod.HandleAnimation = Vehicle.HandleAnimation
@@ -115,6 +127,8 @@ do -- Spawning and Updating
 			net.Start("ACF_RequestVehicleInfo")
 				net.WriteEntity(Pod)
 				net.WriteInt(Vehicle.HandleAnimation(_, Entity:CPPIGetOwner()), 10)
+				net.WriteVector(Entity.CamOffset)
+				net.WriteInt(Entity.CamZoom, 3)
 			net.Broadcast()
 
 			Pod:SetNoDraw(true)
@@ -562,6 +576,8 @@ do
 		end
 
 		self:NextThink(Clock.CurTime)
+
+		return true
 	end
 end
 

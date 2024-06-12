@@ -19,3 +19,9 @@ ACF.PersistClientData("PlateSizeZ", 5)
 ACF.PersistClientData("TankSizeX", 24)
 ACF.PersistClientData("TankSizeY", 24)
 ACF.PersistClientData("TankSizeZ", 24)
+
+-- Camera behavior
+ACF.PersistClientData("CamZoom", 2)
+ACF.PersistClientData("CamOffsetX", 0)
+ACF.PersistClientData("CamOffsetY", -25)
+ACF.PersistClientData("CamOffsetZ", 50)

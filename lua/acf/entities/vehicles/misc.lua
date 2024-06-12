@@ -11,7 +11,7 @@ if util.IsValidModel("models/lubprops/seat/raceseat.mdl") then
         Name = "Driver Racing Seat",
         Description = "A racing seat suited for drivers.",
         Model = "models/lubprops/seat/raceseat.mdl",
-        Mass = 100,
+        Mass = 25,
         Preview = {
             FOV = 90,
         },
@@ -21,7 +21,7 @@ if util.IsValidModel("models/lubprops/seat/raceseat.mdl") then
         Name = "Passenger Racing Seat",
         Description = "A racing seat suited for passengers.",
         Model = "models/lubprops/seat/raceseat2.mdl",
-        Mass = 100,
+        Mass = 25,
         Preview = {
             FOV = 90,
         },
@@ -34,7 +34,7 @@ if util.IsValidModel("models/liddul/crewseat.mdl") then
         Name = "Modular Crew Seat",
         Description = "A crew seat with modular bodygroups.",
         Model = "models/liddul/crewseat.mdl",
-        Mass = 100,
+        Mass = 50,
         Preview = {
             FOV = 90,
         },

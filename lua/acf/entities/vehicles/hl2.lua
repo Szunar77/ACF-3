@@ -10,7 +10,7 @@ do
         Name = "Wooden Chair",
         Description = "A Wooden Chair",
         Model = "models/nova/chair_wood01.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -20,7 +20,7 @@ do
         Name = "Chair",
         Description = "A Plastic Chair",
         Model = "models/nova/chair_plastic01.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -30,7 +30,7 @@ do
         Name = "Jeep Seat",
         Description = "A Seat from VALVe's Jeep",
         Model = "models/nova/jeep_seat.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -40,7 +40,7 @@ do
         Name = "Airboat Seat",
         Description = "A Seat from VALVe's Airboat",
         Model = "models/nova/airboat_seat.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -50,7 +50,7 @@ do
         Name = "Office Chair",
         Description = "A Small Office Chair",
         Model = "models/nova/chair_office01.mdl",
-        Mass = 100,
+        Mass = 50,
         Preview = {
             FOV = 90,
         },
@@ -60,7 +60,7 @@ do
         Name = "Big Office Chair",
         Description = "A Big Office Chair",
         Model = "models/nova/chair_office02.mdl",
-        Mass = 100,
+        Mass = 30,
         Preview = {
             FOV = 90,
         },
@@ -71,7 +71,7 @@ do
             Name = "Jalopy Seat",
             Description = "A Seat from VALVe's Jalopy",
             Model = "models/nova/jalopy_seat.mdl",
-            Mass = 100,
+            Mass = 20,
             Preview = {
                 FOV = 90,
             },
@@ -96,7 +96,7 @@ do -- PhoeniX-Storms Vehicles
         Name = "Car Seat",
         Description = "PHX Airboat Seat with Sitting Animation",
         Model = "models/props_phx/carseat2.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -107,7 +107,7 @@ do -- PhoeniX-Storms Vehicles
         Name = "Car Seat 2",
         Description = "PHX Airboat Seat with Jeep animations",
         Model = "models/props_phx/carseat3.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
@@ -118,7 +118,7 @@ do -- PhoeniX-Storms Vehicles
         Name = "Car Seat 3",
         Description = "PHX Airboat Seat with Airboat animations",
         Model = "models/props_phx/carseat2.mdl",
-        Mass = 100,
+        Mass = 20,
         Preview = {
             FOV = 90,
         },
