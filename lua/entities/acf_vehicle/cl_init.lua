@@ -6,7 +6,7 @@ local LocalPlayer = LocalPlayer
 local MouseScrollDelta = 0
 -- local SmoothDistance = 0
 local LastFOV = 0
-local CurDistance = 150
+-- local CurDistance = 150
 
 local WorldCamMins = Vector(-4, -4, -4)
 local WorldCamMaxs = Vector(4, 4, 4)
@@ -42,9 +42,9 @@ hook.Add("InputMouseApply", "ACF_VehicleZoomScroll", function(Cmd)
     if Vehicle.CamZoom == 0 then return end
 
     local MouseWheel = -Cmd:GetMouseWheel()
-    local test = math.max((math.abs(CurDistance) + math.abs(MouseWheel)) / 10, 10)
+    -- local test = math.max((math.abs(CurDistance) + math.abs(MouseWheel)) / 10, 10)
     --print(test)
-    MouseScrollDelta = math.Clamp(MouseScrollDelta - MouseWheel * test, -95, 100) -- -2000, 180)
+    MouseScrollDelta = math.Clamp(MouseScrollDelta - MouseWheel * 2, 0, 100) -- -2000, 180)
     --print(MouseScrollDelta)
 end)
 

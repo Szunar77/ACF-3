@@ -29,8 +29,8 @@ local PlayerOutputBinds = {
 	[IN_ATTACK2] = "Mouse2",
 	[IN_RELOAD] = "R",
 
-	[IN_WEAPON2] = "PrevWeapon",
-	[IN_WEAPON1] = "NextWeapon",
+	-- [IN_WEAPON2] = "PrevWeapon",
+	-- [IN_WEAPON1] = "NextWeapon",
 	-- ["impulse 100"] = "Light",
 }
 
@@ -42,7 +42,10 @@ do -- Spawning and Updating
 	-- CFW.addParentDetour("acf_vehicle", "Pod")
 
 	local Inputs = {
+		"Toggle Turret (Toggles the use of any linked turret drives.)",
+		"FLIR (Enables FLIR filter for the driver.)",
 	}
+
 	local Outputs = {
 		"W", "A", "S", "D", "Mouse1", "Mouse2",
 		"R", "Space", "Shift", "Zoom", "Alt", "Duck", -- "Noclip",
@@ -170,6 +173,7 @@ do -- Spawning and Updating
 		Entity.Throttle     = 0
 		Entity.CanEnter     = true
 		Entity.GearboxSetup = "Unknown"
+		Entity.TurretLocked = false
 
 		Pod:SetAngles(Ang)
 		Pod:SetModel("models/vehicles/pilot_seat.mdl")
@@ -535,19 +539,26 @@ end
 
 do
 	local Clock = Utilities.Clock
+	local DriverKeyDown = FindMetaTable("Player").KeyDown
+
+	local function RecacheBindOutput(Entity, SelfTbl, Output, Value)
+		if SelfTbl.Outputs[Output].Value == Value then return end
+		WireLib.TriggerOutput(Entity, Output, Value)
+	end
 
 	function ENT:Think()
-		local Pod = self.Pod
+		local SelfTbl = self:GetTable()
+		local Pod = SelfTbl.Pod
 		local Driver = Pod:GetDriver()
 		if not IsValid(Driver) then return end
 
 		local CamAng = Driver:LocalEyeAngles()
-		WireLib.TriggerOutput(self, "CamAng", CamAng)
+		RecacheBindOutput(self, SelfTbl, "CamAng", CamAng)
 
-		local Turrets = self.Turrets
+		local Turrets = SelfTbl.Turrets
 
 		-- Perform turret outputs
-		if next(Turrets) then
+		if next(Turrets) and not SelfTbl.TurretLocked then
 			local InputAngle = Pod:LocalToWorldAngles(CamAng)
 
 			for Turret, _ in pairs(Turrets) do
@@ -555,11 +566,11 @@ do
 			end
 		end
 
-		local Engines = self.Engines
+		local Engines = SelfTbl.Engines
 
 		-- Perform engine outputs
 		if next(Engines) then
-			local IsInMovement = Driver:KeyDown(IN_FORWARD) or Driver:KeyDown(IN_MOVELEFT) or Driver:KeyDown(IN_MOVERIGHT) or Driver:KeyDown(IN_BACK)
+			local IsInMovement = DriverKeyDown(Driver, IN_FORWARD) or DriverKeyDown(Driver, IN_MOVELEFT) or DriverKeyDown(Driver, IN_MOVERIGHT) or DriverKeyDown(Driver, IN_BACK)
 			local Throttle = IsInMovement and 100 or 0
 
 			for Engine in pairs(Engines) do
@@ -572,13 +583,46 @@ do
 
 		-- Perform player key outputs
 		for Bind, Output in pairs(PlayerOutputBinds) do
-			WireLib.TriggerOutput(self, Output, Driver:KeyDown(Bind) and 1 or 0)
+			--WireLib.TriggerOutput(self, Output, Driver:KeyDown(Bind) and 1 or 0)
+			RecacheBindOutput(self, SelfTbl, Output, DriverKeyDown(Driver, Bind) and 1 or 0)
 		end
 
 		self:NextThink(Clock.CurTime)
 
 		return true
 	end
+end
+
+do
+	ACF.AddInputAction("acf_vehicle", "Toggle Turret", function(Entity, Value)
+		Value = tobool(Value)
+		if not Value then return end
+
+		Entity.TurretLocked = not Entity.TurretLocked
+
+		if Entity.TurretLocked == true then
+			for Turret, _ in pairs(Entity.Turrets) do
+				Turret:InputDirection(Turret.CurrentAngle)
+				--Turret:TriggerInput("Active", Entity.TurretLocked and 0 or 1)
+			end
+		end
+	end)
+
+	ACF.AddInputAction("acf_vehicle", "FLIR", function(Entity, Value)
+		local Pod = Entity.Pod
+		if not IsValid(Pod) then return end
+
+		local Driver = Pod:GetDriver()
+		if not IsValid(Driver) then return end
+
+		Value = tobool(Value)
+
+		if Value then
+			FLIR.start(Driver)
+		else
+			FLIR.stop(Driver)
+		end
+	end)
 end
 
 do	-- Dupe Support
